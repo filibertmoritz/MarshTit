@@ -13,8 +13,12 @@ library(tidyverse)
 select <- dplyr::select; filter <- dplyr::filter; rename <- dplyr::rename
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 2. Get data from GBIF ####
+# 2.1 Get occ data from GBIF ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# https://rpubs.com/jonesor/gettinggbifdata
+# https://www.r-bloggers.com/2021/03/downloading-and-cleaning-gbif-data-with-r/
+# https://docs.ropensci.org/rgbif/articles/getting_occurrence_data.html
 
 # set species name 
 speciesKey <- name_backbone(name = "Poecile palustris")$speciesKey
@@ -42,7 +46,7 @@ file.rename(from = "data/0029308-260226173443078.csv", to = "data/MarshTit_gbif_
 occ.data <- read.csv(file = "data/MarshTit_gbif_download.csv", header = T, sep = "\t") 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 3. Clean data ####
+# 2.2 Clean occ data ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # clean data 
@@ -58,5 +62,22 @@ occ.data %>% ggplot() +
 
 occ.data %>% mutate(year = year(date)) %>% group_by(year) %>% summarise(n = n()) %>%
   ggplot() + geom_col(mapping = aes(x = year, y = n))
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 3. Get environmental covariates ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# load libraries for data download 
+library(sdmpredictors)
+library(geodata)
+
+# load administrative boundaries for sweden and its counties 
+sweden <- st_read("data/vect.data/Sweden_vect.shp") # from geodata::gadm(country = "Sweden", level = 0)
+county <- st_read("data/vect.data/Counties_sweden_vect.shp") # from geodata::gadm(country = "Sweden", level = 1)
+
+# get data 
+sdmpredictors::get_layers_info() 
+clim <- geodata::worldclim_global(var = "tavg", res = 10, country = "SE")
 
 
