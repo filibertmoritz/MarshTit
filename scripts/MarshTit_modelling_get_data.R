@@ -72,7 +72,7 @@ occ.data %>% mutate(year = year(date)) %>% group_by(year) %>% summarise(n = n())
 library(sdmpredictors)
 library(geodata)
 
-# load administrative boundaries for sweden and its counties 
+# load administrative boundaries for sweden and it's counties 
 sweden <- st_read("data/vect.data/Sweden_vect.shp") # from geodata::gadm(country = "Sweden", level = 0)
 county <- st_read("data/vect.data/Counties_sweden_vect.shp") # from geodata::gadm(country = "Sweden", level = 1)
 
