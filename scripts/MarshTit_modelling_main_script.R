@@ -17,7 +17,7 @@ source("scripts/MarshTit_modelling_prep_envCovs.R") # for occurrence locations, 
 source("scripts/MarshTit_modelling_get_LiDAR_data.R") # for study area, and sdm map prediction
 
 # step 5: model species distribution 
-# source("scripts/MarshTit_modelling_built_model.R")
+source("scripts/MarshTit_modelling_built_model.R")
 
 # step 6: visualisations 
 
