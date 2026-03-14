@@ -15,23 +15,21 @@ library(exactextractr)
 select <- dplyr::select; filter <- dplyr::filter; rename <- dplyr::rename
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 2. load and prepare vector data ####
+# 2. load and prepare vector data or names of rasters ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# load skane and create study area 
-skane <- st_read(dsn = 'data/vect.data/Skane_vect.shp') %>% st_transform(crs = 3006) #  from geodata::gadm(country = "Sweden", level = 0) and 1
-study.area <- skane
-study.area.buffer <- st_buffer(study.area, dist = 1000)
+# load basic variables 
+load("data/basic.variables.RData")
 
 # get all rasters 
 rast.files <- list.files(path = "data/raster.data/")
 lidar.files <- rast.files[grep(x = rast.files, pattern = "na.tif")]
-lidar.names <- c("LiDAR.bottom", "LiDar.lower", "LiDAR.upper", "LiDAR.top", "canopy.height")
+lidar.names <- c("LiDAR.bottom", "LiDAR.lower", "LiDAR.upper", "LiDAR.top", "canopy.height")
 
 # get occ data 
 occ.data <- readRDS("data/occ.data.rds") 
-occ.data<- occ.data %>% mutate(ID = row_number())
-occ.buffer <- occ.data %>% st_buffer(dist = 240, nQuadSegs = 1)
+occ.data <- occ.data %>% mutate(ID = row_number())
+occ.buffer <- occ.data %>% st_buffer(dist = buffer.size, nQuadSegs = 1)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 3. Extract data from rasters ####
@@ -77,11 +75,12 @@ levels(r)[[1]] <- levels(r)[[1]] %>% left_join(labels.eng, join_by(ID)) %>% sele
 
 # extract data from raster 
 extr.dat <- exactextractr::exact_extract(r, occ.buffer, fun = 'weighted_frac', weights = 'area', append_cols = 'ID')
-names(extr.dat) <- c('ID', paste('NMD', levels(r)[[1]]$Klass.eng.short[-1], sep = '.'))
+classes.available <- as.numeric(gsub(".*?([0-9]+).*", "\\1", names(extr.dat))[-1]) # for a manual check which classes are there 
+names(extr.dat) <- c('ID', paste('NMD', levels(r)[[1]]$Klass.eng.short[match(classes.available, levels(r)[[1]]$ID)], sep = '.')) # WATCH OUT - this lines removes class 0!
 names(extr.dat) <- gsub(x = names(extr.dat),pattern = " ", replacement = ".") # make colnames prettier 
 occ.buffer <- occ.buffer %>% left_join(extr.dat, join_by(ID)) # join back to df
 
-
+# as.numeric(gsub(".*?([0-9]+).*", "\\1", names(extr.dat))[-1]) 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###### 3.3 Moisture index  ####
@@ -123,5 +122,5 @@ occ.buffer <- occ.buffer %>% left_join(extr.dat, join_by(ID)) # join back to df
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 saveRDS(occ.buffer, "data/modelling.data.rds") # this is all data ready for modelling
-
+rm(list = ls()[!grepl( "occ.buffer", x = ls())]) # clear workspace
 

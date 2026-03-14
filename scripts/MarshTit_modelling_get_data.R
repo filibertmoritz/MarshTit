@@ -44,7 +44,7 @@ unzip("data/0029308-260226173443078.zip", exdir = "data/")
 file.rename(from = "data/0029308-260226173443078.csv", to = "data/MarshTit_gbif_download.csv")
 
 # load data into R again
-occ.data <- read.csv(file = "data/MarshTit_gbif_download.csv", header = T, sep = "\t") 
+# occ.data <- read.csv(file = "data/MarshTit_gbif_download.csv", header = T, sep = "\t") 
 
 
 

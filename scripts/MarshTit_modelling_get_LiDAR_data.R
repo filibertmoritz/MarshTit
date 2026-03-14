@@ -18,15 +18,7 @@ select <- dplyr::select; filter <- dplyr::filter; rename <- dplyr::rename
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # load skane and create study area 
-skane <- st_read(dsn = 'data/vect.data/Skane_vect.shp') %>% st_transform(crs = 3006) #  from geodata::gadm(country = "Sweden", level = 0) and 1
-study.area <- skane
-study.area.buffer <- st_buffer(study.area, dist = 1000)
-study.area.grid <- study.area.buffer %>% 
-  st_make_grid(cellsize = 500, square = F) %>% 
-  st_intersection(study.area.buffer) %>% 
-  st_sf() %>% 
-  filter(st_geometry_type(.) %in% c("POLYGON", "MULTIPOLYGON")) %>% # to avoid issues with exact_extract
-  mutate(CellID = row_number())
+load("data/basic.variables.RData")
 
 # get all rasters 
 rast.files <- list.files(path = "data/raster.data/")
@@ -48,7 +40,7 @@ lidar.names <- c("LiDAR.bottom", "LiDar.lower", "LiDAR.upper", "LiDAR.top", "can
 for(i in 1:length(lidar.files)){
   # load and crop rasters 
   r <- terra::rast(x = paste0("data/raster.data/", lidar.files[i])) # load raster
-  r <- terra::crop(x =r, y = study.area.buffer) # crop to study area to avoid memory issues 
+  r <- terra::crop(x =r, y = study.area.buffer) # crop to study areato buffer to avoid memory issues 
   
   # extract area-weighted means 
   extr.dat <- exact_extract(r, study.area.grid, fun = "mean", weights = "area", append_cols = "CellID")
@@ -78,12 +70,31 @@ levels(r)[[1]] <- levels(r)[[1]] %>% left_join(labels.eng, join_by(ID)) %>% sele
 
 # extract data from raster 
 extr.dat <- exactextractr::exact_extract(r, study.area.grid, fun = 'weighted_frac', weights = 'area', append_cols = 'CellID')
-names(extr.dat) <- c('CellID', paste('NMD', levels(r)[[1]]$Klass.eng.short, sep = '.'))
+classes.available <- as.numeric(gsub(".*?([0-9]+).*", "\\1", names(extr.dat))[-1]) # for a manual check which classes are there 
+names(extr.dat) <- c('CellID', paste('NMD', levels(r)[[1]]$Klass.eng.short[match(classes.available, levels(r)[[1]]$ID)], sep = '.')) # WATCH OUT - this lines removes class 0!names(extr.dat) <- gsub(x = names(extr.dat),pattern = " ", replacement = ".") # make colnames prettier 
 names(extr.dat) <- gsub(x = names(extr.dat),pattern = " ", replacement = ".") # make colnames prettier 
 study.area.grid <- study.area.grid %>% left_join(extr.dat, join_by(CellID)) # join back to df
 
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-###### 3.3 Climate data  ####
+###### 3.3 Moisture index  ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Source https://geodatakatalogen.naturvardsverket.se/geonetwork/srv/swe/catalog.search#/metadata/cae71f45-b463-447f-804f-2847869b19b0
+
+# pre-process moisture data 
+r <- terra::rast(x = "data/raster.data/Markfuktighetsindex_NMD_del9.tif") # load .tif file
+r <- terra::project(r, crs(study.area.buffer))
+r <- terra::crop(r, study.area.buffer) # crop to study area
+
+# extract data from raster 
+extr.dat <- exactextractr::exact_extract(r, study.area.grid, fun = 'mean', weights = 'area', append_cols = 'CellID')
+names(extr.dat) <- c("CellID", "Moisture")
+study.area.grid <- study.area.grid %>% left_join(extr.dat, join_by(CellID)) # join back to df
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+###### 3.4 Climate data  ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -96,12 +107,14 @@ study.area.grid <- study.area.grid %>% left_join(extr.dat, join_by(CellID)) # jo
 # clim <- geodata::worldclim_global(var = "tavg", res = 10, country = "SE")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-###### 3.4 Elevation and Slope data  ####
+###### 3.5 Elevation and Slope data  ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 4. Save data  ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+saveRDS(study.area.grid, "data/prediction.data.sdm.map.rds") # this is all data ready for modelling
+rm(list = ls()[!grepl( "study.area.grid", x = ls())]) # clear workspace
 # st_write(obj = study.area.grid, dsn = "data/envCovs.shp")
 

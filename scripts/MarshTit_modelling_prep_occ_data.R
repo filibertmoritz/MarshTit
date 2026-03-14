@@ -10,16 +10,13 @@
 library(CoordinateCleaner)
 library(sf)
 library(tidyverse)
-library(CoordinateCleaner)
 select <- dplyr::select; filter <- dplyr::filter; rename <- dplyr::rename
 
 # load observation data 
 raw.data <- read.csv(file = "data/MarshTit_gbif_download.csv", header = T, sep = "\t") 
 
-# load study area 
-skane <- st_read(dsn = 'data/vect.data/Skane_vect.shp') %>% st_transform(crs = 3006) #  from geodata::gadm(country = "Sweden", level = 0) and 1
-study.area <- skane
-study.area.buffer <- st_buffer(study.area, dist = 1000)
+# load basic variables 
+load("data/basic.variables.RData")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 2. Data cleaning and manipulation ####
@@ -34,7 +31,8 @@ pres.data <- clean.data %>%
   st_transform(crs = 3006) %>%
   mutate(date = make_date(year, month, day)) %>%
   drop_na(date) %>%
-  filter(year(date) >= 2016) %>% 
+  filter(year(date) %in% study.period) %>% # filter for study period
+  filter(month(date) %in% breeding.period) %>% # filter for breeding period
   # filter(coordinateUncertaintyInMeters <= 1000) %>% # low uncertainty filter skews data to more recent observations
   select(stateProvince, date, collectionCode, coordinateUncertaintyInMeters, individualCount)
 
@@ -50,7 +48,7 @@ pres.data <- pres.data %>%
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # sample pseudo-absences
-set.seed(123)
+set.seed(123) # set seed for reproducable results
 abs.data <- st_sample(study.area, size = 2*dim(pres.data)[1], type = "random") %>% 
   st_sf() %>% 
   mutate(occ = 0)
@@ -58,15 +56,16 @@ abs.data <- st_sample(study.area, size = 2*dim(pres.data)[1], type = "random") %
 # join to presences 
 occ.data <- bind_rows(pres.data, abs.data)
 
-plot(st_geometry(study.area), col = "lightblue")
-plot(st_geometry(occ.data), add = TRUE, col = ifelse(occ.data$occ == 1, "red", "black"), size = 0.1)
+# plot to check everything
+plot(st_geometry(study.area), col = "gray80", main = "Study area with presence-absence records")
+plot(st_geometry(occ.data), add = TRUE, col = ifelse(occ.data$occ == 1, adjustcolor("red", alpha.f = 0.4),
+     adjustcolor("blue", alpha.f = 0.4)),cex = 0.1, pch = 16)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 4. Export data ####
+# 4. Export data and remove unneeded data ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 saveRDS(occ.data, "data/occ.data.rds")
-
-
+rm(list = ls()[!grepl( "occ.data", x = ls())]) # clear workspace
 
