@@ -1,13 +1,19 @@
 ##### Marsh tit distribution modelling, script with basic decisions and  ####
 ##### Script written by Filibert Heim, filibert.heim@posteo.de, in March 2026 ####
 
+library(tidyverse)
+library(sf)
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 1. basic decisons ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# habitat sizes: 35ha (birds of the world, Broughton et al. 2014, 2015)
-buffer.size <- 367
-grid.size <- 635.5
+# habitat sizes: 35ha - winter (birds of the world, Broughton et al. 2014, 2015), summer: 4-6ha
+grid.size <- 263 # 6 ha
+# grid.size <- 635.5 (for 35 ha)
+buffer.size <- grid.size / sqrt(3)
+# buffer.size <- 367 (for 35 ha)
+
 
 # breeding period: March-June (birds of the world, and Källander et al. 2017)
 breeding.period <- 3:6

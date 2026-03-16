@@ -23,7 +23,7 @@ load("data/basic.variables.RData")
 # get all rasters 
 rast.files <- list.files(path = "data/raster.data/")
 lidar.files <- rast.files[grep(x = rast.files, pattern = "na.tif")]
-lidar.names <- c("LiDAR.bottom", "LiDar.lower", "LiDAR.upper", "LiDAR.top", "canopy.height")
+lidar.names <- c("LiDAR.bottom", "LiDAR.lower", "LiDAR.upper", "LiDAR.top", "canopy.height")
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
