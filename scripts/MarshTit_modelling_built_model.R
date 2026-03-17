@@ -199,9 +199,9 @@ s
 # effect size table 
 effect.sizes <- tibble(Parameters =  str_remove(rownames(s$coefficients), 
                                                 pattern = '\\.scaled') ,
-                       `Parameter estimates` = exp(s$coefficients[,1]), 
-                       `2.5% confidence level` = exp(s$coefficients[,1] - s$coefficients[,2]), 
-                       `97.5% confidence level` = exp(s$coefficients[,1] + s$coefficients[,2]),
+                       `Parameter estimates` = s$coefficients[,1], 
+                       `2.5% confidence level` = s$coefficients[,1] - s$coefficients[,2], 
+                       `97.5% confidence level` = s$coefficients[,1] + s$coefficients[,2],
                        `P-value` = s$coefficients[,4]) %>% 
   mutate(across(c('Parameter estimates', '2.5% confidence level',
                   '97.5% confidence level', 'P-value'), ~ round(.x, 2)))
@@ -264,31 +264,31 @@ for(p in predictors){
 
 # plot the marginal effects 
 plot <- plotting.data %>% 
-  mutate(predictor = case_when(predictor == 'LiDAR.lower' ~ 'LiDAR understory',
-                               predictor == "NMD.Deciduous" ~ "Softwood deciduous forest", 
-                               predictor == "NMD.Hardwood" ~ "Hardwood deciduous forest", 
-                               predictor == "NMD.Open.artificial" ~ "Anthropogenic land", 
-                               predictor == "Moisture" ~ " Soil moisture")) %>% 
+  mutate(predictor = case_when(predictor == 'LiDAR.lower' ~ 'a) Understory',
+                               predictor == "NMD.Deciduous" ~ "b) Softwood deciduous forest", 
+                               predictor == "NMD.Hardwood" ~ "c) Hardwood deciduous forest", 
+                               predictor == "NMD.Open.artificial" ~ "d) Anthropogenic land", 
+                               predictor == "Moisture" ~ "e) Soil moisture")) %>% 
   ggplot() + 
   geom_line(mapping = aes(y = pred, x = predictor.unscaled, col = predictor),lwd = 1.2) + 
   geom_ribbon(mapping = aes(ymin = pred.lower, ymax = pred.upper, 
                             x = predictor.unscaled, fill = predictor), alpha = 0.4) + 
   scale_fill_discrete(name= 'Units of the Predictors', 
-                      labels =  c('Soil moisture in ...', 
-                                  'Fraction of anthropogenic open \n land', 
-                                  'Fraction of hardwood deciduous forest', 
-                                  'LiDAR understory as fraction of \n points falling in height class', 
-                                  "Fraction of softwood deciduous forest")) +
+                      labels =  c('Soil moisture index', 
+                                  'Fraction of anthropogenic land', 
+                                  'Fraction of hardwood deciduous \nforest', 
+                                  'Understory as fraction of \nLiDAR points falling in height class', 
+                                  "Fraction of softwood deciduous \nforest")) +
   scale_colour_discrete(name= 'Units of the Predictors', 
-                        labels =  c('Soil moisture in ...', 
-                                    'Fraction of anthropogenic open \n land', 
-                                    'Fraction of hardwood deciduous forest', 
-                                    'LiDAR understory as fraction of \n points falling in height class', 
-                                    "Fraction of softwood deciduous forest")) +
+                        labels =  c('Soil moisture index', 
+                                    'Fraction of anthropogenic land', 
+                                    'Fraction of hardwood deciduous \nforest', 
+                                    'Understory as fraction of \nLiDAR points falling in height class', 
+                                    "Fraction of softwood deciduous \nforest")) +
   facet_wrap(~predictor, scales = 'free_x') +
-  labs(x = 'Predictor (for unit see legend)', y ='Predicted Occupancy') +
-  theme_bw(base_size = 10) +
-  theme(legend.position = c(0.84,0.2)) # 
+  labs(x = 'Predictor (for unit see legend)', y ='Predicted Mrsh Tit Occupancy') +
+  theme_bw(base_size = 13) +
+  theme(legend.position = c(0.85,0.2)) # 
 plot
 
 # save marginal effects plot 
@@ -345,6 +345,7 @@ data.map$sd <- predict(best.model, newdata = data.map , se.fit = T, type = "resp
 
 # plot prediction
 library(ggspatial)
+# library(ggrastr)
 
 pred.map <- data.map %>% drop_na() %>%
   ggplot() +
@@ -353,9 +354,13 @@ pred.map <- data.map %>% drop_na() %>%
   # scale_fill_viridis_c(option = "plasma", name = "Predicted \nOccupancy", limits = c(0, 1), direction = 1) +
   #scale_linetype_manual(name = "Transect surveys", values = c("Transect lines" = "solid")) +
   # theme_void() +
+  annotation_scale(location = "bl", width_hint = 0.4, bar_cols = c("gray20", "white")) +
+  annotation_north_arrow(location = "bl", which_north = "true", 
+                         pad_x = unit(0.1, "in"), pad_y = unit(0.25, "in"),
+                         style = north_arrow_fancy_orienteering) +
   theme_bw() + 
   theme(legend.position = "right", # c(0.95, 0.25) # 
-        panel.border = element_rect(color = "darkgrey", fill = NA, linewidth = 1), 
+        panel.border = element_rect(color = "grey30", fill = NA, linewidth = 1), 
         axis.line = element_blank()) +
   labs(title = "Predicted Marsh Tit Occupancy in Scania, Sweden", 
        x = 'Longitude', y = 'Latitude')
