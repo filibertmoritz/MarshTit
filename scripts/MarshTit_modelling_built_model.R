@@ -46,7 +46,8 @@ data <- data %>%
     NMD.Non.evergreen.mon = NMD.Deciduous + NMD.Hardwood + NMD.Deciduous.hardwood + NMD.Mixed.forest, 
     NMD.Non.evergreen = NMD.Deciduous + NMD.Hardwood + NMD.Deciduous.hardwood, 
     NMD.Open.lands = NMD.Veg.open + NMD.Non.veg.open, # bot equal to arable lands!
-    NMD.Open.artificial = NMD.Building + NMD.Artificial.open + NMD.Road.rail) %>% 
+    NMD.Open.artificial = NMD.Building + NMD.Artificial.open + NMD.Road.rail, 
+    NMD.Evergreen = NMD.Pine + NMD.Spruce + NMD.Mixed.conifer) %>% 
   select(-matches("\\.dry$"), -matches("\\.wet$"))
 
 
@@ -109,9 +110,10 @@ data <- data %>%
 # model selection 
 # 1) preferred forest habitat: either all decidous + decidous-mixed with evergreen OR only decidous without mixed evergreen
 formulas <- list(nullmodel = formula(occ ~ 1),
-                 NMD.Deciduous = formula(occ ~ NMD.Deciduous.scaled),
+                 NMD.Deciduous = formula(occ ~ NMD.Deciduous.scaled ),
                  # NMD.Mixed.forest = formula(occ ~ NMD.Mixed.forest.scaled), 
                  NMD.Hardwood = formula(occ ~ NMD.Hardwood.scaled), 
+                 NMD.Evergreen = formula(occ ~ NMD.Evergreen.scaled), 
                  `NMD.Hardwood + NMD.Deciduous` = formula(occ ~ NMD.Hardwood.scaled + NMD.Deciduous.scaled))
 
 models <- list()
@@ -219,7 +221,7 @@ print(doc, target = "output/tables/Marsh.tit.effect.sizes.docx") # actually save
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # make data for prediction
-n = 1000
+n = 2000
 make.seq <- function(x, n = 500) { # define a function to create a seq of data
   seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE), length.out = n)
 }
@@ -274,17 +276,17 @@ plot <- plotting.data %>%
   geom_ribbon(mapping = aes(ymin = pred.lower, ymax = pred.upper, 
                             x = predictor.unscaled, fill = predictor), alpha = 0.4) + 
   scale_fill_discrete(name= 'Units of the Predictors', 
-                      labels =  c('Soil moisture index', 
-                                  'Fraction of anthropogenic land', 
-                                  'Fraction of hardwood deciduous \nforest', 
-                                  'Understory as fraction of \nLiDAR points falling in height class', 
-                                  "Fraction of softwood deciduous \nforest")) +
+                      labels =  c('Understory as fraction of \nLiDAR points falling in height class', 
+                                  'Fraction of softwood \ndeciduous forest', 
+                                  'Fraction of hardwood \ndeciduous forest', 
+                                  'Fraction of anthropo-\ngenic land', 
+                                  "Soil moisture index")) +
   scale_colour_discrete(name= 'Units of the Predictors', 
-                        labels =  c('Soil moisture index', 
-                                    'Fraction of anthropogenic land', 
-                                    'Fraction of hardwood deciduous \nforest', 
-                                    'Understory as fraction of \nLiDAR points falling in height class', 
-                                    "Fraction of softwood deciduous \nforest")) +
+                        labels =  c('Understory as fraction of \nLiDAR points falling in height class', 
+                                    'Fraction of softwood \ndeciduous forest', 
+                                    'Fraction of hardwood \ndeciduous forest', 
+                                    'Fraction of anthropo-\ngenic land', 
+                                    "Soil moisture index")) +
   facet_wrap(~predictor, scales = 'free_x') +
   labs(x = 'Predictor (for unit see legend)', y ='Predicted Mrsh Tit Occupancy') +
   theme_bw(base_size = 13) +
@@ -292,7 +294,7 @@ plot <- plotting.data %>%
 plot
 
 # save marginal effects plot 
-ggsave(filename = 'output/plots/Marsh.tit.marg.effects.png', plot = plot, dpi = 400)
+ggsave(filename = 'output/plots/Marsh.tit.marg.effects.png', plot = plot, dpi = 600, height = 6, width = 8.5)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -315,7 +317,8 @@ data.map <- data.map %>%
          NMD.Non.evergreen.mon = NMD.Deciduous + NMD.Hardwood + NMD.Deciduous.hardwood + NMD.Mixed.forest, 
          NMD.Non.evergreen = NMD.Deciduous + NMD.Hardwood + NMD.Deciduous.hardwood, 
          NMD.Open.lands = NMD.Veg.open + NMD.Non.veg.open, # bot equal to arable lands!
-         NMD.Open.artificial = NMD.Building + NMD.Artificial.open + NMD.Road.rail) %>% 
+         NMD.Open.artificial = NMD.Building + NMD.Artificial.open + NMD.Road.rail, 
+         NMD.Evergreen = NMD.Pine + NMD.Spruce + NMD.Mixed.conifer) %>% 
   select(-matches("\\.dry$"), -matches("\\.wet$"))
 
 # get sd and mean from training data set 
@@ -366,12 +369,20 @@ pred.map <- data.map %>% drop_na() %>%
        x = 'Longitude', y = 'Latitude')
 
 # save map 
-ggsave(filename = 'output/plots/Marsh.tit.pred.distribution.scania.png', plot = pred.map, dpi = 400)
-
+ggsave(filename = 'output/plots/Marsh.tit.pred.distribution.scania.png', plot = pred.map, dpi = 1000, width = 8, height = 7)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 7. Produce prediction map by employing a prediction approach ####
+# 7. Get model fit estimates ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# AUC as area under the curve for predictive power 
+library(pROC)
+auc(roc(data$occ, fitted(best.model)))
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 8. Produce prediction map by employing a prediction approach ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # global.formula <- formula(paste("occ ~", paste(setdiff(names(data %>% select(-matches("\\.scaled$"))), c("ID", "occ")), collapse = "*")))

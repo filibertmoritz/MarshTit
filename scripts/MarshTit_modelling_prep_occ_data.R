@@ -57,9 +57,9 @@ abs.data <- st_sample(study.area, size = 2*dim(pres.data)[1], type = "random") %
 occ.data <- bind_rows(pres.data, abs.data)
 
 # plot to check everything
-plot(st_geometry(study.area), col = "gray80", main = "Study area with presence-absence records")
-plot(st_geometry(occ.data), add = TRUE, col = ifelse(occ.data$occ == 1, adjustcolor("red", alpha.f = 0.4),
-     adjustcolor("blue", alpha.f = 0.4)),cex = 0.1, pch = 16)
+plot(vect(study.area), col = "white")
+plot(vect(occ.data), add = TRUE, col = ifelse(occ.data$occ == 1, adjustcolor("firebrick", alpha.f = 0.9),
+     adjustcolor("gray90", alpha.f = 0.4)),cex = 0.05, pch = 16)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -29,7 +29,8 @@ lidar.names <- c("LiDAR.bottom", "LiDAR.lower", "LiDAR.upper", "LiDAR.top", "can
 # get occ data 
 occ.data <- readRDS("data/occ.data.rds") 
 occ.data <- occ.data %>% mutate(ID = row_number())
-occ.buffer <- occ.data %>% st_buffer(dist = buffer.size, nQuadSegs = 1)
+occ.buffer <- occ.data %>% st_buffer(dist = buffer.size, nQuadSegs = 1) 
+occ.buffer.landscape <- occ.data %>% st_buffer(dist = buffer.landscape, nQuadSegs = 1) 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 3. Extract data from rasters ####
@@ -98,6 +99,21 @@ extr.dat <- exactextractr::exact_extract(r, occ.buffer, fun = 'mean', weights = 
 names(extr.dat) <- c("ID", "Moisture")
 occ.buffer <- occ.buffer %>% left_join(extr.dat, join_by(ID)) # join back to df
 
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+###### 3.4 Effort  ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# load all bird observations from skane
+birds.skane <- readRDS("data/occ.data.all.skane.rds")
+
+# load package to count observations per grid cell
+# library(sfhotspot) # too slow!
+
+occ.buffer$Effort <- lengths(st_intersects(occ.buffer.landscape, birds.skane))  # count all observations 100ha around the presence
+
+# rm all skane bird observations again to save memory
+rm(birds.skane)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###### 3.4 Climate data  ####

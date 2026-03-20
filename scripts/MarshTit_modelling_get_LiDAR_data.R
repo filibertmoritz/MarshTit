@@ -75,7 +75,7 @@ names(extr.dat) <- c('CellID', paste('NMD', levels(r)[[1]]$Klass.eng.short[match
 names(extr.dat) <- gsub(x = names(extr.dat),pattern = " ", replacement = ".") # make colnames prettier 
 study.area.grid <- study.area.grid %>% left_join(extr.dat, join_by(CellID)) # join back to df
 
-
+rm(extr.dat)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###### 3.3 Moisture index  ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,6 +84,7 @@ study.area.grid <- study.area.grid %>% left_join(extr.dat, join_by(CellID)) # jo
 
 # pre-process moisture data 
 r <- terra::rast(x = "data/raster.data/Markfuktighetsindex_NMD_del9.tif") # load .tif file
+terra::tmpFiles(remove = TRUE) # remove temp files to make space, otherwise next reprojection may fail
 r <- terra::project(r, crs(study.area.buffer))
 r <- terra::crop(r, study.area.buffer) # crop to study area
 
@@ -92,9 +93,27 @@ extr.dat <- exactextractr::exact_extract(r, study.area.grid, fun = 'mean', weigh
 names(extr.dat) <- c("CellID", "Moisture")
 study.area.grid <- study.area.grid %>% left_join(extr.dat, join_by(CellID)) # join back to df
 
+rm(extr.dat)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-###### 3.4 Climate data  ####
+###### 3.4 Effort  ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# load all bird observations from skane
+# birds.skane <- readRDS("data/occ.data.all.skane.rds")
+
+# load package to count observations per grid cell
+# library(sfhotspot) # too slow!
+
+# study.area.grid$Effort <- lengths(st_intersects(study.area.grid, birds.skane))  # may cause error because mismatch in length!, then st_join + count() as alternative!
+# study.area.grid$Effort.log <- log(study.area.grid$Effort) # take log!
+
+# rm all skane bird observations again to save memory
+# srm(birds.skane)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+###### 3.5 Climate data  ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -107,7 +126,7 @@ study.area.grid <- study.area.grid %>% left_join(extr.dat, join_by(CellID)) # jo
 # clim <- geodata::worldclim_global(var = "tavg", res = 10, country = "SE")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-###### 3.5 Elevation and Slope data  ####
+###### 3.6 Elevation and Slope data  ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
