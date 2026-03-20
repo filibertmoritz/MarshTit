@@ -12,4 +12,4 @@ To run the analysis, please run the [main analysis script]([https://github.com/f
 4) Extract environmental variables (LiDAR, land cover and moisture) for a) the presence-(pseudo)absence records, and b) whole Scania for later prediction
 5) Built GLM and visualise results in marginal effect plots and predicted distribution. NB: There are two version of this script, for an analysis with and without consideration of observation bias or effort.
 
-All output is saved in the (output folder)[https://github.com/filibertmoritz/MarshTit/tree/main/output] including marginal effect plots and prediction maps of Marsh Tit occurence in Scania (also available as (.gpkg file)[https://github.com/filibertmoritz/MarshTit/blob/main/output/Marh.tit.Occurence.Scania.predicted.effort.gpkg]).  
+All output is saved in the [output folder](https://github.com/filibertmoritz/MarshTit/tree/main/output) including marginal effect plots and prediction maps of Marsh Tit occurence in Scania (also available as [.gpkg file](https://github.com/filibertmoritz/MarshTit/blob/main/output/Marh.tit.Occurence.Scania.predicted.effort.gpkg)).  
