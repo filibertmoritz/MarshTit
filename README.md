@@ -4,7 +4,7 @@ We aim to understand the distribution and habitat requirements of **Marsh Tits**
 
 This project is part of the course BIOR83: 'Conservation Biology' at Lund University.  
 
-To run the analysis, please run the [main analysis script](https://github.com/filibertmoritz/MarshTit](https://github.com/filibertmoritz/MarshTit/blob/main/scripts/MarshTit_modelling_main_script.R) which will run the required scripts in the adequate order:
+To run the analysis, please run the [main analysis script](https://github.com/filibertmoritz/MarshTit/blob/main/scripts/MarshTit_modelling_main_script.R) which will run the required scripts in the adequate order:
 
 1) Obtain presence-observations from GBIF
 2) Set basic variables (to be called in each script)
