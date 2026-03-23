@@ -197,7 +197,7 @@ best.model <- models[[aictable[1,1]]]
 # refit best model without scaling 
 best.model.unscaled <- glm(occ ~ Effort.sqrt + NMD.Deciduous + NMD.Hardwood + canopy.height + I(Moisture^2) + NMD.Open.artificial, 
     family = binomial(link = "logit"), data = data)
-saveRDS(object = best.model.unscaled, "output/Marsh.tit.best.model.effort.unscaled")
+saveRDS(object = best.model.unscaled, "output/Marsh.tit.best.model.effort.rds")
 
 # perform model diagnostics using DHARMa 
 plot(simulateResiduals(best.model)) # looks alright considering small sample size and sensitivity of DHARMa's diagnostic 
